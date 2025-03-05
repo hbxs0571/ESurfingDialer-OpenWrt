@@ -1,0 +1,36 @@
+name: Build ESurfingDialer for OpenWrt
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up OpenWrt SDK
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential libncurses5-dev gawk git subversion libssl-dev gettext zlib1g-dev swig unzip python3 python3-setuptools
+          cd sdk
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Build ESurfingDialer
+        run: |
+          cd sdk
+          cp -r ../ESurfingDialer package/
+          make package/ESurfingDialer/compile V=s
+
+      - name: Upload IPK file
+        uses: actions/upload-artifact@v2
+        with:
+          name: esurfingdialer.ipk
+          path: sdk/bin/packages/ramips/mt7621/esurfingdialer_*.ipk
